@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تأكد - حاسبة الصلاحية الرقمية</title>
+    <style>
+        :root { --main-color: #27ae60; --bg-color: #f0f2f5; }
+        body { font-family: sans-serif; background-color: var(--bg-color); margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .card { background: white; width: 90%; max-width: 450px; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); text-align: center; }
+        h1 { color: #333; font-size: 28px; margin-bottom: 5px; }
+        .subtitle { color: #666; font-size: 14px; margin-bottom: 25px; }
+        
+        /* تصميم يشبه طباعة المصنع */
+        .input-group { display: flex; gap: 10px; justify-content: center; direction: ltr; margin-bottom: 20px; }
+        .date-input { width: 60px; height: 60px; border: 2px solid #ddd; border-radius: 12px; text-align: center; font-size: 22px; font-weight: bold; background: #fafafa; }
+        .date-input:focus { border-color: var(--main-color); outline: none; background: #fff; }
+        label { display: block; font-size: 12px; color: #888; margin-top: 5px; }
+
+        button { width: 100%; background: var(--main-color); color: white; border: none; padding: 15px; border-radius: 12px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        button:hover { background: #219150; transform: translateY(-2px); }
+
+        #result { margin-top: 25px; display: none; padding-top: 20px; border-top: 1px dashed #ccc; }
+        .timer-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; }
+        .time-item { background: #f9f9f9; padding: 10px; border-radius: 10px; border: 1px solid #eee; }
+        .time-value { display: block; font-size: 20px; font-weight: bold; color: var(--main-color); }
+        .time-label { font-size: 11px; color: #777; }
+        .expired { color: #e74c3c !important; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h1></h1>
+    <p class="subtitle">أدخل التاريخ كما هو مكتوب على العبوة</p>
+
+    <div class="input-group">
+        <div>
+            <input type="number" id="year" class="date-input" placeholder="26" min="2024">
+            <label>السنة</label>
+        </div>
+        <div>
+            <input type="number" id="month" class="date-input" placeholder="07" min="1" max="12">
+            <label>الشهر</label>
+        </div>
+        <div>
+            <input type="number" id="day" class="date-input" placeholder="13" min="1" max="31">
+            <label>اليوم</label>
+        </div>
+    </div>
+
+    <button onclick="startCalc()">احسب الصلاحية</button>
+
+    <div id="result">
+        <h3 id="msg"></h3>
+        <div class="timer-grid">
+            <div class="time-item"><span id="r-months" class="time-value">0</span><span class="time-label">شهور</span></div>
+            <div class="time-item"><span id="r-weeks" class="time-value">0</span><span class="time-label">أسابيع</span></div>
+            <div class="time-item"><span id="r-days" class="time-value">0</span><span class="time-label">أيام</span></div>
+            <div class="time-item"><span id="r-hours" class="time-value">0</span><span class="time-label">ساعات</span></div>
+            <div class="time-item"><span id="r-mins" class="time-value">0</span><span class="time-label">دقائق</span></div>
+            <div class="time-item"><span id="r-secs" class="time-value">0</span><span class="time-label">ثواني</span></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let interval;
+    function startCalc() {
+        if(interval) clearInterval(interval);
+        
+        const d = document.getElementById('day').value;
+        const m = document.getElementById('month').value;
+        let y = document.getElementById('year').value;
+        
+        // تصحيح السنة لو كتب المستخدم 26 بدلاً من 2026
+        if(y.length === 2) y = "20" + y;
+
+        if(!d || !m || !y) { alert("فضلاً أكمل التاريخ"); return; }
+
+        const targetDate = new Date(y, m - 1, d);
+        document.getElementById('result').style.display = 'block';
+
+        function update() {
+            const now = new Date();
+            const diff = targetDate - now;
+
+            if (diff <= 0) {
+                document.getElementById('msg').innerText = "❌ المنتج منتهي!";
+                document.getElementById('msg').className = "expired";
+                // تصفير العداد
+                const values = document.querySelectorAll('.time-value');
+                values.forEach(v => { v.innerText = "0"; v.classList.add('expired'); });
+                clearInterval(interval);
+                return;
+            }
+
+            document.getElementById('msg').innerText = "⏳ متبقي على الانتهاء:";
+            document.getElementById('msg').className = "";
+
+            const s = Math.floor(diff / 1000);
+            const min = Math.floor(s / 60);
+            const h = Math.floor(min / 60);
+            const day = Math.floor(h / 24);
+
+            document.getElementById('r-months').innerText = Math.floor(day / 30);
+            document.getElementById('r-weeks').innerText = Math.floor(day / 7);
+            document.getElementById('r-days').innerText = day;
+            document.getElementById('r-hours').innerText = h % 24;
+            document.getElementById('r-mins').innerText = min % 60;
+            document.getElementById('r-secs').innerText = s % 60;
+        }
+
+        interval = setInterval(update, 1000);
+        update();
+    }
+</script>
+
+</body>
+</html>
